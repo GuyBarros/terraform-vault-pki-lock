@@ -1,0 +1,59 @@
+resource "vault_generic_endpoint" "requester_token" {
+  depends_on           = [vault_token_auth_backend_role.requester-role,vault_identity_entity.requester,vault_identity_entity_alias.requester]
+  namespace            = vault_namespace.pki_design.path_fq
+  disable_read         = true
+  disable_delete       = true
+  path                 = "auth/token/create/requester-role"
+  ignore_absent_fields = true
+  write_fields         = ["auth","token_type","entity_id","data_json"]
+
+  data_json = <<EOT
+{
+  "ttl":"0s",
+  "explicit_max_ttl":"0s",
+  "period":"0s",
+  "display_name":"requester",
+  "num_uses":0,
+  "renewable":true,
+  "type":"service",
+  "entity_alias":"requester"
+}
+EOT
+}
+
+resource "vault_generic_endpoint" "approver_token" {
+  depends_on           = [vault_token_auth_backend_role.approver-role,vault_identity_entity.approver,vault_identity_entity_alias.approver]
+  namespace            = vault_namespace.pki_design.path_fq
+  disable_read         = true
+  disable_delete       = true
+  path                 = "auth/token/create/approver-role"
+  ignore_absent_fields = true
+  write_fields         = ["auth","token_type","entity_id","data_json"]
+  data_json = <<EOT
+{
+"ttl":"0s",
+"explicit_max_ttl":"0s",
+"period":"0s",
+"display_name":"approver",
+"num_uses":0,
+"renewable":true,
+"type":"service",
+"entity_alias":"approver"
+}
+EOT
+}
+
+output "request" {
+  value = vault_generic_endpoint.requester_token
+sensitive = true
+
+}
+
+output "approver" {
+  value = vault_generic_endpoint.approver_token
+sensitive = true
+}
+
+# vault token create -output-curl-string -display-name=requester -entity-alias=requester -role=requester-role -namespace=pki_design
+
+ # vault token create -output-curl-string -display-name=approver -entity-alias=approver -role=approver-role -namespace=pki_design
